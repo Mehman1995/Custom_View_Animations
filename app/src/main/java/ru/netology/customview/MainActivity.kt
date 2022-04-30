@@ -12,8 +12,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<StatsView>(R.id.view_circle).data = listOf(
             500F,
             500F,
-            300F,
-            500F
+            500F,
+            400F
         )
     }
 }
