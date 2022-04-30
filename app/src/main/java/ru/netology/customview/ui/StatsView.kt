@@ -1,15 +1,11 @@
 package ru.netology.customview.ui
 
-import android.animation.Animator
-import android.animation.ValueAnimator
 import android.content.AttributionSource
 import android.content.Context
 import android.graphics.*
 import android.graphics.Color.parseColor
 import android.util.AttributeSet
 import android.view.View
-import android.view.animation.BounceInterpolator
-import android.view.animation.LinearInterpolator
 import androidx.core.content.withStyledAttributes
 import androidx.core.graphics.toXfermode
 import ru.netology.customview.R
@@ -27,7 +23,7 @@ class StatsView @JvmOverloads constructor(
     var data: List<Float> = emptyList()
         set(value) {
             field = value
-            update()
+            invalidate()
         }
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -58,8 +54,6 @@ class StatsView @JvmOverloads constructor(
     private var oval = RectF()
     private var colors = emptyList<Int>()
     private var degree = 360F
-    var progress = 0F
-    var animator: Animator? = null
 
     init {
         context.withStyledAttributes(attributeSet, R.styleable.StatsView) {
@@ -93,19 +87,14 @@ class StatsView @JvmOverloads constructor(
         }
 
         var startAngle = -90F
-        val rotation = degree * progress
-
-        canvas?.drawArc(oval, startAngle, degree, false, paint2)
+        canvas?.drawArc(oval, startAngle, 360F, false, paint2)
 
         data.forEachIndexed { index, datum ->
             val angle = (datum / (data.maxOrNull()?.times(data.count())!!)) * degree
             paint.color = colors.getOrElse(index) { generateRandomColor() }
-            canvas?.drawArc(
-                oval, startAngle + rotation, angle * progress, false, paint
-            )
+            canvas?.drawArc(oval, startAngle, angle, false, paint)
             startAngle += angle
         }
-
 
         val text = (data.sum() / (data.maxOrNull()?.times(data.count())!!)) * 100
         canvas?.drawText(
@@ -115,31 +104,22 @@ class StatsView @JvmOverloads constructor(
             textPaint
         )
 
+            //Второй варинт решения 3 задачи без изначального отрисовывания круга
+//        if (text != 100F) {
+//            val angle = degree - (data.sum() / (data.maxOrNull()?.times(data.count())!!)) * degree
+//            canvas?.drawArc(oval, startAngle, angle, false, paint2)
+//            startAngle += angle
+//        }
+//        paint.color = colors[0]
+//        canvas?.drawArc(oval, startAngle, 1F, false, paint)
 
         if (text == 100F) {
             paint.color = colors[0]
-            canvas?.drawArc(oval, startAngle + rotation, 1F, false, paint)
+            canvas?.drawArc(oval, startAngle, 1F, false, paint)
         }
     }
 
     private fun generateRandomColor() = Random.nextInt(0xFF000000.toInt(), 0xFFFFFFFF.toInt())
-
-    private fun update() {
-        animator?.apply {
-            cancel()
-            removeAllListeners()
-        }
-
-        animator = ValueAnimator.ofFloat(0F, 1F).apply {
-            addUpdateListener {
-                interpolator = LinearInterpolator()
-                duration = 5_000
-                progress = it.animatedValue as Float
-                invalidate()
-            }
-            start()
-        }
-    }
 
 
 }
